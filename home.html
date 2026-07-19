@@ -448,6 +448,9 @@
     function toggleMode() {
         currentMode = currentMode === 'ai' ? 'browser' : 'ai';
         localStorage.setItem('searchMode', currentMode);
+        // Leaving AI mode must also close the chat + history panel, otherwise
+        // it stays open underneath the browser view.
+        if (currentMode === 'browser' && aiBody.style.display === 'flex') hideResponse();
         updateBadge();
         searchInput.value = '';
     }
@@ -740,6 +743,10 @@
             if (!query) return;
 
             if (currentMode === 'browser') {
+                // Close any panel that would linger under the browser view.
+                if (aiBody.style.display === 'flex') hideResponse();
+                if (configPanel.style.display === 'block') hideConfig();
+                setBrowsing(true);
                 send({ action: 'browse', query });
                 searchInput.value = '';
                 return;

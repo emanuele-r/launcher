@@ -165,19 +165,24 @@ page_cm.add_style_sheet(WebKit2.UserStyleSheet.new(
     WebKit2.UserContentInjectedFrames.ALL_FRAMES,
     WebKit2.UserStyleLevel.USER,
     None, None))
-page_wv = WebKit2.WebView.new_with_user_content_manager(page_cm)
+# Persistent browsing profile (cookies, localStorage, HSTS, cache). A browser
+# with no stored state on every query looks like automation to Google and is
+# the main "unusual traffic" captcha trigger.
+page_data = WebKit2.WebsiteDataManager(
+    base_data_directory=str(Path.home() / '.local' / 'share' / 'launcher'),
+    base_cache_directory=str(Path.home() / '.cache' / 'launcher'))
+page_ctx = WebKit2.WebContext(website_data_manager=page_data)
+page_ctx.set_preferred_languages(['en-US', 'en'])
+page_wv = WebKit2.WebView(web_context=page_ctx, user_content_manager=page_cm)
 page_wv.set_no_show_all(True)
-# A modern desktop user-agent stops Google from flagging the embedded browser
-# as insecure and cuts down on sign-in nagging.
+# Identify as Safari — truthful for a WebKit engine. Claiming Chrome makes
+# Google probe for Chrome-only APIs, detect the mismatch, and serve captchas.
 page_wv.get_settings().set_user_agent(
-    'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 '
-    '(KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36')
-# Persist cookies across runs. A fresh, cookie-less session every launch looks
-# like bot traffic to Google and is a major "unusual traffic" captcha trigger.
-CONFIG_PATH.parent.mkdir(parents=True, exist_ok=True)
+    'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/605.1.15 '
+    '(KHTML, like Gecko) Version/17.4 Safari/605.1.15')
 try:
-    page_wv.get_context().get_cookie_manager().set_persistent_storage(
-        str(CONFIG_PATH.parent / 'cookies.sqlite'),
+    page_ctx.get_cookie_manager().set_persistent_storage(
+        str(Path.home() / '.local' / 'share' / 'launcher' / 'cookies.sqlite'),
         WebKit2.CookiePersistentStorage.SQLITE)
 except Exception:
     pass
