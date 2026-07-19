@@ -13,7 +13,7 @@ os.environ['GDK_BACKEND'] = 'x11'
 import json, threading, urllib.request, urllib.error, urllib.parse
 from pathlib import Path
 
-APP_ID  = 'io.github.lehman.Launcher'
+APP_ID  = 'io.github.emanuele_r.Launcher'
 APP_URL = 'https://buymeacoffee.com/lehman'
 
 def data_file(name):

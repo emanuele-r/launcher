@@ -47,19 +47,19 @@ The COSMIC Store installs Flatpaks, so the same manifest covers both.
 
 ```sh
 flatpak install flathub org.gnome.Platform//47 org.gnome.Sdk//47
-flatpak-builder --user --install --force-clean build-dir io.github.lehman.Launcher.yml
-flatpak run io.github.lehman.Launcher
+flatpak-builder --user --install --force-clean build-dir io.github.emanuele_r.Launcher.yml
+flatpak run io.github.emanuele_r.Launcher
 ```
 
 To publish a single-file bundle you can hand to the COSMIC Store / other machines:
 
 ```sh
-flatpak-builder --repo=repo --force-clean build-dir io.github.lehman.Launcher.yml
-flatpak build-bundle repo launcher.flatpak io.github.lehman.Launcher
+flatpak-builder --repo=repo --force-clean build-dir io.github.emanuele_r.Launcher.yml
+flatpak build-bundle repo launcher.flatpak io.github.emanuele_r.Launcher
 ```
 
 > If your installed `org.gnome.Platform` version differs, change
-> `runtime-version` in `io.github.lehman.Launcher.yml` to match.
+> `runtime-version` in `io.github.emanuele_r.Launcher.yml` to match.
 
 ---
 

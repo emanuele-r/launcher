@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <component type="desktop-application">
-  <id>io.github.lehman.Launcher</id>
+  <id>io.github.emanuele_r.Launcher</id>
   <metadata_license>CC0-1.0</metadata_license>
   <project_license>MIT</project_license>
   <name>Launcher</name>
   <summary>Quick command bar with web search and multi-provider AI chat</summary>
 
-  <developer id="io.github.lehman">
+  <developer id="io.github.emanuele_r">
     <name>Lehman</name>
   </developer>
 
@@ -27,7 +27,7 @@
     </ul>
   </description>
 
-  <launchable type="desktop-id">io.github.lehman.Launcher.desktop</launchable>
+  <launchable type="desktop-id">io.github.emanuele_r.Launcher.desktop</launchable>
 
   <!-- NOTE: update the GitHub user/repo below to the real repository before
        submitting to Flathub — the images must be reachable at these URLs.
@@ -35,15 +35,15 @@
   <screenshots>
     <screenshot type="default">
       <caption>AI chat with the conversation-history panel</caption>
-      <image>https://raw.githubusercontent.com/lehman/launcher/main/screenshots/ai-chat.png</image>
+      <image>https://raw.githubusercontent.com/emanuele-r/launcher/main/screenshots/ai-chat.png</image>
     </screenshot>
     <screenshot>
       <caption>The command bar</caption>
-      <image>https://raw.githubusercontent.com/lehman/launcher/main/screenshots/main.png</image>
+      <image>https://raw.githubusercontent.com/emanuele-r/launcher/main/screenshots/main.png</image>
     </screenshot>
     <screenshot>
       <caption>Settings: AI provider, model, and search engine</caption>
-      <image>https://raw.githubusercontent.com/lehman/launcher/main/screenshots/config.png</image>
+      <image>https://raw.githubusercontent.com/emanuele-r/launcher/main/screenshots/config.png</image>
     </screenshot>
   </screenshots>
 

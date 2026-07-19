@@ -1,4 +1,4 @@
-APP_ID  = io.github.lehman.Launcher
+APP_ID  = io.github.emanuele_r.Launcher
 PREFIX ?= /usr/local
 BINDIR  = $(PREFIX)/bin
 DATADIR = $(PREFIX)/share
