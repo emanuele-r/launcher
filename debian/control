@@ -1,0 +1,22 @@
+Source: lehman-launcher
+Section: utils
+Priority: optional
+Maintainer: Lehman <3ma.reds@gmail.com>
+Build-Depends: debhelper-compat (= 13)
+Standards-Version: 4.6.2
+Rules-Requires-Root: no
+
+Package: lehman-launcher
+Architecture: all
+Depends: ${misc:Depends},
+         python3,
+         python3-gi,
+         gir1.2-gtk-3.0,
+         gir1.2-webkit2-4.1
+Description: Quick command launcher with web search and AI chat
+ Launcher is a lightweight, Spotlight-style command bar with web search,
+ an embedded browser, and multi-provider AI chat (OpenAI, Claude, Kimi,
+ OpenRouter, and any OpenAI-compatible endpoint).
+ .
+ It is frameless, always-on-top, and keyboard-driven, and saves your AI
+ conversation history in a lateral panel.

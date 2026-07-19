@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=Launcher
+GenericName=Command Launcher
+Comment=Quick search, web browsing, and multi-provider AI chat
+Exec=io.github.lehman.Launcher
+Icon=io.github.lehman.Launcher
+Terminal=false
+Categories=Utility;GTK;
+Keywords=launcher;search;ai;chat;browser;
+StartupNotify=false

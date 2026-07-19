@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="dark">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            background: transparent;
+            overflow: hidden;
+            /* Render native form controls (the <select> popups) in dark mode so
+               their text stays visible regardless of the OS GTK theme. */
+            color-scheme: dark;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .wrapper {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            background: rgba(18, 18, 18, 0.92);
+        }
+
+        .input-row {
+            display: flex;
+            align-items: center;
+            height: 56px;
+            flex-shrink: 0;
+            border-bottom: 1px solid transparent;
+            transition: border-color 0.2s;
+        }
+
+        .input-row.has-response {
+            border-color: rgba(255, 255, 255, 0.08);
+        }
+
+        #searchInput {
+            flex: 1;
+            background: transparent;
+            color: #f0f0f0;
+            border: none;
+            outline: none;
+            padding: 0 12px 0 18px;
+            height: 100%;
+            font-size: 15px;
+            letter-spacing: 0.01em;
+        }
+
+        #searchInput::placeholder {
+            color: rgba(255, 255, 255, 0.28);
+        }
+
+        #dragHandle {
+            flex-shrink: 0;
+            padding: 0 10px 0 14px;
+            color: rgba(255,255,255,0.18);
+            font-size: 14px;
+            cursor: grab;
+            user-select: none;
+            line-height: 56px;
+        }
+        #dragHandle:active { cursor: grabbing; }
+
+        .mode-badge {
+            flex-shrink: 0;
+            margin-right: 14px;
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.3);
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            user-select: none;
+        }
+
+        /* Tips row under the search bar. */
+        .hints {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            height: 28px;
+            flex-shrink: 0;
+            padding: 0 18px;
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.28);
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            user-select: none;
+            overflow: hidden;
+            white-space: nowrap;
+        }
+
+        .hints .hint { display: inline-flex; align-items: center; gap: 5px; }
+
+        /* The requested > < markers framing each command/key. */
+        .hints .key {
+            color: rgba(255, 255, 255, 0.55);
+            letter-spacing: 0.02em;
+        }
+        .hints .key::before { content: '>'; color: #4caf7d; margin-right: 2px; }
+        .hints .key::after  { content: '<'; color: #4caf7d; margin-left: 2px; }
+
+        /* AI mode: a lateral history panel beside the chat. */
+        .ai-body {
+            display: none;      /* shown as flex while an AI conversation is open */
+            flex: 1;
+            min-height: 0;
+        }
+
+        .sidebar {
+            width: 190px;
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            background: rgba(0, 0, 0, 0.18);
+            border-right: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .sidebar-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 12px;
+            font-size: 11px;
+            letter-spacing: 0.07em;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.32);
+        }
+
+        .new-chat {
+            background: rgba(76, 175, 125, 0.15);
+            color: #4caf7d;
+            border: none;
+            border-radius: 6px;
+            font-size: 11px;
+            font-family: inherit;
+            padding: 3px 9px;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+        .new-chat:hover { background: rgba(76, 175, 125, 0.28); }
+
+        .conv-list {
+            flex: 1;
+            overflow-y: auto;
+            overscroll-behavior: contain;
+        }
+
+        .conv-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 12px;
+            font-size: 12px;
+            color: #b0b0b0;
+            cursor: pointer;
+            border-left: 2px solid transparent;
+        }
+        .conv-item:hover { background: rgba(255, 255, 255, 0.05); }
+        .conv-item.active {
+            background: rgba(76, 175, 125, 0.08);
+            border-left-color: #4caf7d;
+            color: #e6e6e6;
+        }
+        .conv-title { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .conv-del { color: rgba(255, 255, 255, 0.25); font-size: 15px; line-height: 1; }
+        .conv-del:hover { color: rgba(255, 100, 100, 0.85); }
+
+        #responseArea {
+            flex: 1;
+            min-width: 0;
+            overflow-y: auto;
+            overscroll-behavior: contain;
+            padding: 16px 18px;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255,255,255,0.1) transparent;
+        }
+
+        /* WebKit scrollbar — the default one overlaps content and looks buggy. */
+        #responseArea::-webkit-scrollbar,
+        #configPanel::-webkit-scrollbar,
+        .conv-list::-webkit-scrollbar { width: 8px; }
+        #responseArea::-webkit-scrollbar-track,
+        #configPanel::-webkit-scrollbar-track,
+        .conv-list::-webkit-scrollbar-track { background: transparent; }
+        #responseArea::-webkit-scrollbar-thumb,
+        #configPanel::-webkit-scrollbar-thumb,
+        .conv-list::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.12);
+            border-radius: 4px;
+            border: 2px solid transparent;
+            background-clip: padding-box;
+        }
+        #responseArea::-webkit-scrollbar-thumb:hover,
+        #configPanel::-webkit-scrollbar-thumb:hover,
+        .conv-list::-webkit-scrollbar-thumb:hover {
+            background: rgba(255,255,255,0.22);
+            background-clip: padding-box;
+        }
+
+        .message {
+            margin-bottom: 16px;
+            line-height: 1.6;
+            font-size: 14px;
+        }
+
+        .message.user {
+            color: #4caf7d;
+            font-size: 13px;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: baseline;
+            gap: 8px;
+        }
+
+        .message.user .timestamp {
+            font-size: 10px;
+            color: #3a8f61;
+            letter-spacing: 0.03em;
+            flex-shrink: 0;
+        }
+
+        .message.assistant {
+            color: #9e9e9e;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .cursor {
+            display: inline-block;
+            width: 2px;
+            height: 14px;
+            background: rgba(255,255,255,0.6);
+            vertical-align: text-bottom;
+            animation: blink 0.8s step-end infinite;
+        }
+
+        @keyframes blink {
+            50% { opacity: 0; }
+        }
+
+        .loading-dots span {
+            display: inline-block;
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.4);
+            margin: 0 2px;
+            animation: dot 1.2s ease-in-out infinite;
+        }
+        .loading-dots span:nth-child(2) { animation-delay: 0.2s; }
+        .loading-dots span:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes dot {
+            0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
+            40% { transform: scale(1); opacity: 1; }
+        }
+
+        .error { color: rgba(255, 100, 100, 0.8); font-size: 13px; }
+
+        #configPanel {
+            display: none;
+            flex: 1;
+            padding: 20px 18px;
+            overflow-y: auto;
+            overscroll-behavior: contain;
+        }
+
+        .config-label {
+            font-size: 11px;
+            color: rgba(255,255,255,0.35);
+            letter-spacing: 0.07em;
+            text-transform: uppercase;
+            margin-bottom: 6px;
+        }
+
+        .config-field {
+            margin-bottom: 18px;
+        }
+
+        .config-input, .config-select {
+            width: 100%;
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 8px;
+            color: #e0e0e0;
+            font-size: 13px;
+            padding: 9px 12px;
+            outline: none;
+            font-family: inherit;
+            transition: border-color 0.15s;
+        }
+
+        .config-input:focus, .config-select:focus {
+            border-color: rgba(255,255,255,0.25);
+        }
+
+        .config-select option { background: #1a1a1a; color: #e0e0e0; }
+
+        .config-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 4px;
+        }
+
+        .config-btn {
+            padding: 8px 18px;
+            border-radius: 7px;
+            border: none;
+            font-size: 13px;
+            font-family: inherit;
+            cursor: pointer;
+            transition: opacity 0.15s;
+        }
+
+        .config-btn:hover { opacity: 0.8; }
+        .config-btn.primary { background: #4caf7d; color: #000; }
+        .config-btn.secondary { background: rgba(255,255,255,0.08); color: #ccc; }
+
+        .config-saved {
+            display: none;
+            font-size: 12px;
+            color: #4caf7d;
+            margin-left: 10px;
+            align-self: center;
+        }
+
+        .config-footer {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px 14px;
+            align-items: center;
+            margin-top: 24px;
+            padding-top: 14px;
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.3);
+        }
+        .config-footer a { color: #4caf7d; text-decoration: none; }
+        .config-footer a:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+<div class="wrapper">
+    <div class="input-row" id="inputRow">
+        <span id="dragHandle">⠿</span>
+        <input type="text" id="searchInput" placeholder="Search…" autocomplete="off">
+        <span class="mode-badge" id="modeBadge">web</span>
+    </div>
+    <div class="hints" id="hints">
+        <span class="hint"><span class="key">Ctrl+C</span> esc</span>
+        <span class="hint"><span class="key">/config</span></span>
+        <span class="hint"><span class="key">/mode</span> switch mode</span>
+    </div>
+    <div class="ai-body" id="aiBody">
+        <div class="sidebar" id="sidebar">
+            <div class="sidebar-head">
+                <span>History</span>
+                <button class="new-chat" id="newChat">+ New</button>
+            </div>
+            <div class="conv-list" id="historyList"></div>
+        </div>
+        <div id="responseArea"></div>
+    </div>
+    <div id="configPanel">
+        <div class="config-field">
+            <div class="config-label">AI Provider</div>
+            <select class="config-select" id="cfgProvider">
+                <option value="openai">OpenAI</option>
+                <option value="anthropic">Claude (Anthropic)</option>
+                <option value="moonshot">Kimi (Moonshot)</option>
+                <option value="openrouter">OpenRouter</option>
+                <option value="custom">Custom (OpenAI-compatible)</option>
+            </select>
+        </div>
+        <div class="config-field">
+            <div class="config-label">API Key</div>
+            <input class="config-input" id="cfgApiKey" type="password" placeholder="API key" autocomplete="off">
+        </div>
+        <div class="config-field">
+            <div class="config-label">Model</div>
+            <input class="config-input" id="cfgModel" type="text" placeholder="model name" autocomplete="off" list="cfgModelList">
+            <datalist id="cfgModelList"></datalist>
+        </div>
+        <div class="config-field" id="cfgBaseUrlField" style="display:none;">
+            <div class="config-label">Base URL</div>
+            <input class="config-input" id="cfgBaseUrl" type="text" placeholder="https://…/v1/chat/completions" autocomplete="off">
+        </div>
+        <div class="config-field">
+            <div class="config-label">Web Search Engine</div>
+            <select class="config-select" id="cfgSearchEngine">
+                <option value="google">Google</option>
+                <option value="duckduckgo">DuckDuckGo</option>
+                <option value="bing">Bing</option>
+            </select>
+        </div>
+        <div class="config-actions">
+            <button class="config-btn primary" id="cfgSave">Save</button>
+            <button class="config-btn secondary" id="cfgCancel">Cancel</button>
+            <span class="config-saved" id="cfgSaved">Saved ✓</span>
+        </div>
+        <div class="config-footer">
+            <span>Launcher — by Lehman</span>
+            <a href="#" id="linkCoffee">☕ Buy me a coffee</a>
+            <a href="#" id="linkMail">3ma.reds@gmail.com</a>
+        </div>
+    </div>
+</div>
+
+<script>
+    const send = msg => window.webkit.messageHandlers.launcher.postMessage(JSON.stringify(msg));
+
+    const searchInput = document.getElementById('searchInput');
+    const modeBadge   = document.getElementById('modeBadge');
+    const responseArea = document.getElementById('responseArea');
+    const inputRow    = document.getElementById('inputRow');
+    const hints       = document.getElementById('hints');
+    const aiBody      = document.getElementById('aiBody');
+    const historyList = document.getElementById('historyList');
+
+    // Tips row is only useful in the idle launcher view; hide it once a
+    // response, the config panel, or the browser takes over.
+    function setHints(visible) { hints.style.display = visible ? 'flex' : 'none'; }
+
+    let currentMode = localStorage.getItem('searchMode') || 'browser';
+    let messages = [];
+    let streaming = false;
+    let browsing = false;
+    let currentAssistantEl = null;
+    let currentConvId = null;
+    let currentTitle = '';
+    const genId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+
+    window.setBrowsing = function(val) {
+        browsing = val;
+        modeBadge.textContent = val ? 'browse' : (currentMode === 'ai' ? 'ai' : 'web');
+        inputRow.classList.toggle('has-response', val);
+        setHints(!val);
+        if (!val) searchInput.focus();
+    };
+
+    function updateBadge() {
+        modeBadge.textContent = currentMode === 'ai' ? 'ai' : 'web';
+    }
+    updateBadge();
+
+    function toggleMode() {
+        currentMode = currentMode === 'ai' ? 'browser' : 'ai';
+        localStorage.setItem('searchMode', currentMode);
+        updateBadge();
+        searchInput.value = '';
+    }
+
+    function showResponse() {
+        aiBody.style.display = 'flex';
+        inputRow.classList.add('has-response');
+        setHints(false);
+        send({ action: 'expand', w: 780, h: 460 });
+        send({ action: 'getHistory' });
+    }
+
+    function hideResponse() {
+        aiBody.style.display = 'none';
+        responseArea.innerHTML = '';
+        inputRow.classList.remove('has-response');
+        setHints(true);
+        messages = [];
+        currentConvId = null;
+        currentTitle = '';
+        send({ action: 'collapse' });
+    }
+
+    // Only auto-scroll when the user is already at the bottom, so scrolling up
+    // to re-read earlier output during streaming doesn't yank you back down.
+    function isNearBottom(el, threshold) {
+        threshold = threshold || 48;
+        return el.scrollHeight - el.scrollTop - el.clientHeight <= threshold;
+    }
+
+    function addMessage(role, text) {
+        const el = document.createElement('div');
+        el.className = `message ${role}`;
+        if (role === 'user') {
+            const ts = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            const textNode = document.createElement('span');
+            textNode.textContent = text;
+            const tsNode = document.createElement('span');
+            tsNode.className = 'timestamp';
+            tsNode.textContent = ts;
+            el.appendChild(textNode);
+            el.appendChild(tsNode);
+        } else {
+            el.textContent = text;
+        }
+        responseArea.appendChild(el);
+        responseArea.scrollTop = responseArea.scrollHeight;
+        return el;
+    }
+
+    function addLoadingDots() {
+        const el = document.createElement('div');
+        el.className = 'message assistant';
+        el.innerHTML = '<span class="loading-dots"><span></span><span></span><span></span></span>';
+        responseArea.appendChild(el);
+        responseArea.scrollTop = responseArea.scrollHeight;
+        return el;
+    }
+
+    // Called by Python during streaming
+    window.appendChunk = function(chunk) {
+        if (!currentAssistantEl) return;
+        const stick = isNearBottom(responseArea);
+        const cursor = currentAssistantEl.querySelector('.cursor');
+        if (cursor) cursor.remove();
+        currentAssistantEl.textContent += chunk;
+        const c = document.createElement('span');
+        c.className = 'cursor';
+        currentAssistantEl.appendChild(c);
+        if (stick) responseArea.scrollTop = responseArea.scrollHeight;
+    };
+
+    window.streamDone = function() {
+        streaming = false;
+        if (currentAssistantEl) {
+            const cursor = currentAssistantEl.querySelector('.cursor');
+            if (cursor) cursor.remove();
+            messages.push({ role: 'assistant', content: currentAssistantEl.textContent });
+        }
+        currentAssistantEl = null;
+        persistConversation();
+        searchInput.focus();
+    };
+
+    // ── Conversation history ──────────────────────────────────────────────
+    function persistConversation() {
+        if (!currentConvId || messages.length === 0) return;
+        send({ action: 'saveConversation', id: currentConvId,
+               title: currentTitle, messages, ts: Date.now() });
+        send({ action: 'getHistory' });
+    }
+
+    function newConversation() {
+        messages = [];
+        currentConvId = null;
+        currentTitle = '';
+        currentAssistantEl = null;
+        responseArea.innerHTML = '';
+        refreshActive();
+        searchInput.focus();
+    }
+
+    function appendPlain(role, text) {
+        const el = document.createElement('div');
+        el.className = `message ${role === 'user' ? 'user' : 'assistant'}`;
+        if (role === 'user') {
+            const s = document.createElement('span');
+            s.textContent = text;
+            el.appendChild(s);
+        } else {
+            el.textContent = text;
+        }
+        responseArea.appendChild(el);
+    }
+
+    function refreshActive() {
+        historyList.querySelectorAll('.conv-item').forEach(it =>
+            it.classList.toggle('active', it.dataset.id === currentConvId));
+    }
+
+    window.receiveHistory = function(items) {
+        historyList.innerHTML = '';
+        (items || []).forEach(it => {
+            const row = document.createElement('div');
+            row.className = 'conv-item' + (it.id === currentConvId ? ' active' : '');
+            row.dataset.id = it.id;
+            const t = document.createElement('span');
+            t.className = 'conv-title';
+            t.textContent = it.title || 'Untitled';
+            const del = document.createElement('span');
+            del.className = 'conv-del';
+            del.textContent = '×';
+            del.title = 'Delete';
+            del.addEventListener('click', e => {
+                e.stopPropagation();
+                send({ action: 'deleteConversation', id: it.id });
+                if (it.id === currentConvId) newConversation();
+                row.remove();
+            });
+            row.addEventListener('click', () => send({ action: 'getConversation', id: it.id }));
+            row.appendChild(t);
+            row.appendChild(del);
+            historyList.appendChild(row);
+        });
+    };
+
+    window.receiveConversation = function(conv) {
+        if (!conv || !conv.messages) return;
+        messages = conv.messages.slice();
+        currentConvId = conv.id;
+        currentTitle = conv.title || '';
+        responseArea.innerHTML = '';
+        messages.forEach(m => appendPlain(m.role, m.content));
+        responseArea.scrollTop = responseArea.scrollHeight;
+        refreshActive();
+    };
+
+    // Config panel
+    const configPanel     = document.getElementById('configPanel');
+    const cfgProvider     = document.getElementById('cfgProvider');
+    const cfgApiKey       = document.getElementById('cfgApiKey');
+    const cfgModel        = document.getElementById('cfgModel');
+    const cfgModelList    = document.getElementById('cfgModelList');
+    const cfgBaseUrlField = document.getElementById('cfgBaseUrlField');
+    const cfgBaseUrl      = document.getElementById('cfgBaseUrl');
+    const cfgSearchEngine = document.getElementById('cfgSearchEngine');
+    const cfgSaved        = document.getElementById('cfgSaved');
+
+    const MODEL_SUGGESTIONS = {
+        openai:    ['gpt-4o-mini', 'gpt-4o', 'gpt-4.1', 'gpt-4.1-mini', 'o3-mini'],
+        anthropic: ['claude-opus-4-8', 'claude-sonnet-5', 'claude-haiku-4-5'],
+        moonshot:  ['kimi-latest', 'kimi-k2-0905-preview', 'moonshot-v1-8k', 'moonshot-v1-32k'],
+        openrouter:['openai/gpt-4o-mini', 'openai/gpt-4o', 'anthropic/claude-sonnet-4.5', 'google/gemini-2.0-flash-001', 'meta-llama/llama-3.3-70b-instruct'],
+        custom:    [],
+    };
+
+    let configData = null;
+
+    function applyProvider(name) {
+        const p = (configData && configData.providers[name]) || {};
+        cfgApiKey.value = '';
+        cfgApiKey.placeholder = p.api_key_masked || 'API key';
+        cfgModel.value = p.model || p.default_model || '';
+        cfgModel.placeholder = p.default_model || 'model name';
+        cfgBaseUrlField.style.display = name === 'custom' ? 'block' : 'none';
+        cfgBaseUrl.value = p.base_url || '';
+        cfgModelList.innerHTML = (MODEL_SUGGESTIONS[name] || [])
+            .map(m => `<option value="${m}"></option>`).join('');
+    }
+
+    function showConfig() {
+        aiBody.style.display = 'none';
+        configPanel.style.display = 'block';
+        inputRow.classList.add('has-response');
+        setHints(false);
+        send({ action: 'expand', w: 640, h: 580 });   // tall enough for fields + footer
+        send({ action: 'getConfig' });
+        searchInput.value = '';
+    }
+
+    function hideConfig() {
+        configPanel.style.display = 'none';
+        inputRow.classList.remove('has-response');
+        setHints(true);
+        cfgSaved.style.display = 'none';
+        send({ action: 'collapse' });
+    }
+
+    window.receiveConfig = function(cfg) {
+        configData = cfg;
+        cfgProvider.value = cfg.provider || 'openai';
+        cfgSearchEngine.value = cfg.search_engine || 'google';
+        applyProvider(cfgProvider.value);
+    };
+
+    window.configSaved = function() {
+        cfgSaved.style.display = 'inline';
+        setTimeout(() => { cfgSaved.style.display = 'none'; }, 2000);
+    };
+
+    cfgProvider.addEventListener('change', () => applyProvider(cfgProvider.value));
+
+    document.getElementById('cfgSave').addEventListener('click', () => {
+        send({
+            action: 'saveConfig',
+            provider: cfgProvider.value,
+            api_key: cfgApiKey.value,
+            model: cfgModel.value,
+            base_url: cfgBaseUrl.value,
+            search_engine: cfgSearchEngine.value,
+        });
+    });
+
+    document.getElementById('cfgCancel').addEventListener('click', hideConfig);
+
+    document.getElementById('newChat').addEventListener('click', newConversation);
+    document.getElementById('linkCoffee').addEventListener('click', e => {
+        e.preventDefault();
+        send({ action: 'openExternal', url: 'https://buymeacoffee.com/lehman' });
+    });
+    document.getElementById('linkMail').addEventListener('click', e => {
+        e.preventDefault();
+        send({ action: 'openExternal', url: 'mailto:3ma.reds@gmail.com' });
+    });
+
+    window.streamError = function(err) {
+        streaming = false;
+        if (currentAssistantEl) currentAssistantEl.remove();
+        const el = document.createElement('div');
+        el.className = 'message error';
+        el.textContent = '⚠ ' + err;
+        responseArea.appendChild(el);
+        currentAssistantEl = null;
+        searchInput.focus();
+    };
+
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'c' && event.ctrlKey) {
+            send({ action: 'close' });
+            return;
+        }
+    });
+
+    searchInput.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape') {
+            if (browsing) {
+                send({ action: 'closeBrowse' });
+            } else if (configPanel.style.display === 'block') {
+                hideConfig();
+            } else if (aiBody.style.display === 'flex') {
+                hideResponse();
+            } else {
+                searchInput.value = '';
+                send({ action: 'close' });
+            }
+            return;
+        }
+
+        if (event.key === 'Enter' && !streaming) {
+            const query = searchInput.value.trim();
+
+            if (query === '/mode') {
+                toggleMode();
+                return;
+            }
+            if (query === '/config') {
+                showConfig();
+                return;
+            }
+            if (!query) return;
+
+            if (currentMode === 'browser') {
+                send({ action: 'browse', query });
+                searchInput.value = '';
+                return;
+            }
+
+            // AI mode
+            showResponse();
+            if (!currentConvId) {           // first message of a new conversation
+                currentConvId = genId();
+                currentTitle = query.slice(0, 60);
+            }
+            addMessage('user', query);
+            messages.push({ role: 'user', content: query });
+            searchInput.value = '';
+
+            const loadingEl = addLoadingDots();
+            setTimeout(() => {
+                if (loadingEl.parentNode) loadingEl.remove();
+                currentAssistantEl = document.createElement('div');
+                currentAssistantEl.className = 'message assistant';
+                responseArea.appendChild(currentAssistantEl);
+            }, 300);
+
+            streaming = true;
+            send({ action: 'ai', messages: [...messages] });
+        }
+    });
+
+    document.getElementById('dragHandle').addEventListener('mousedown', function(e) {
+        if (e.button !== 0) return;
+        e.preventDefault();
+        send({ action: 'startMove', x: Math.round(window.screenX + e.clientX), y: Math.round(window.screenY + e.clientY) });
+    });
+
+    window.resetState = function() {
+        streaming = false;
+        browsing = false;
+        messages = [];
+        currentAssistantEl = null;
+        currentConvId = null;
+        currentTitle = '';
+        searchInput.value = '';
+        aiBody.style.display = 'none';
+        responseArea.innerHTML = '';
+        configPanel.style.display = 'none';
+        inputRow.classList.remove('has-response');
+        setHints(true);
+        updateBadge();
+        searchInput.focus();
+    };
+
+    searchInput.focus();
+</script>
+</body>
+</html>

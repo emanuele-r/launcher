@@ -1,0 +1,16 @@
+# Flatpak build artifacts
+build-dir/
+repo/
+.flatpak-builder/
+*.flatpak
+
+# Debian build artifacts
+debian/lehman-launcher/
+debian/.debhelper/
+debian/files
+debian/*.substvars
+debian/debhelper-build-stamp
+
+# Python
+__pycache__/
+*.pyc

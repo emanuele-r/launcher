@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>io.github.lehman.Launcher</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>MIT</project_license>
+  <name>Launcher</name>
+  <summary>Quick command bar with web search and multi-provider AI chat</summary>
+
+  <developer id="io.github.lehman">
+    <name>Lehman</name>
+  </developer>
+
+  <description>
+    <p>
+      Launcher is a lightweight, Spotlight-style command bar that stays out of
+      the way until you summon it. Type to search the web, browse in an embedded
+      viewer, or chat with an AI model — all from one frameless, keyboard-driven
+      window.
+    </p>
+    <p>Features:</p>
+    <ul>
+      <li>Instant web search (DuckDuckGo, Google, or Bing)</li>
+      <li>Built-in browser panel</li>
+      <li>AI chat with OpenAI, Claude (Anthropic), Kimi (Moonshot), OpenRouter, or any OpenAI-compatible endpoint</li>
+      <li>Saved conversation history with a lateral panel</li>
+      <li>Frameless, always-on-top, keyboard-driven</li>
+    </ul>
+  </description>
+
+  <launchable type="desktop-id">io.github.lehman.Launcher.desktop</launchable>
+
+  <!-- NOTE: update the GitHub user/repo below to the real repository before
+       submitting to Flathub — the images must be reachable at these URLs.
+       The files live in screenshots/ in this repo. -->
+  <screenshots>
+    <screenshot type="default">
+      <caption>AI chat with the conversation-history panel</caption>
+      <image>https://raw.githubusercontent.com/lehman/launcher/main/screenshots/ai-chat.png</image>
+    </screenshot>
+    <screenshot>
+      <caption>The command bar</caption>
+      <image>https://raw.githubusercontent.com/lehman/launcher/main/screenshots/main.png</image>
+    </screenshot>
+    <screenshot>
+      <caption>Settings: AI provider, model, and search engine</caption>
+      <image>https://raw.githubusercontent.com/lehman/launcher/main/screenshots/config.png</image>
+    </screenshot>
+  </screenshots>
+
+  <url type="homepage">https://buymeacoffee.com/lehman</url>
+  <url type="donation">https://buymeacoffee.com/lehman</url>
+
+  <update_contact>3ma.reds@gmail.com</update_contact>
+
+  <categories>
+    <category>Utility</category>
+  </categories>
+
+  <keywords>
+    <keyword>launcher</keyword>
+    <keyword>search</keyword>
+    <keyword>ai</keyword>
+    <keyword>chat</keyword>
+    <keyword>browser</keyword>
+  </keywords>
+
+  <content_rating type="oars-1.1"/>
+
+  <releases>
+    <release version="1.0.0" date="2026-07-19">
+      <description>
+        <p>Initial release.</p>
+      </description>
+    </release>
+  </releases>
+</component>
