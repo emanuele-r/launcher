@@ -120,6 +120,12 @@ gi.require_version('Gtk', '3.0')
 gi.require_version('WebKit2', '4.1')
 from gi.repository import Gtk, WebKit2, Gdk, GLib
 
+# Set before any window exists so the X11 WM_CLASS derives from the app id
+# (not "launcher.py") — that's how the shell matches the window to its .desktop
+# entry and shows the right icon in Alt-Tab / the dock.
+GLib.set_prgname(APP_ID)
+GLib.set_application_name('Launcher')
+
 content_manager = WebKit2.UserContentManager()
 content_manager.register_script_message_handler('launcher')
 
@@ -135,9 +141,13 @@ visual = screen.get_rgba_visual()
 if visual:
     win.set_visual(visual)
 
-# App icon. Without this the window manager / dock / alt-tab fall back to a
-# generic icon (often a gear), because the app never told them which icon to use.
-GLib.set_prgname(APP_ID)                 # WM_CLASS → matches the .desktop entry
+# App icon + window class. The window carries its own icon (_NET_WM_ICON), and
+# set_wmclass forces WM_CLASS to the app id so the shell matches the window to
+# the installed .desktop entry (Alt-Tab / dock icon) instead of a generic gear.
+try:
+    win.set_wmclass(APP_ID, APP_ID)      # deprecated, but the reliable X11 path
+except Exception:
+    pass
 _icon = data_file(APP_ID + '.svg')       # bundled next to the script in dev
 if _icon.exists():
     try:

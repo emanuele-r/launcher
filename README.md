@@ -35,9 +35,54 @@ sudo apt install python3-gi gir1.2-gtk-3.0 gir1.2-webkit2-4.1
 python3 launcher.py
 ```
 
-The app is a single-instance daemon: the first run stays resident, and running
-it again toggles the window via `SIGUSR1`. Bind a global shortcut to the
-command (or to `pkill -USR1 -f launcher.py`) to summon it.
+---
+
+## Keyboard shortcut (summon the bar)
+
+The app is a **single-instance daemon**: the first run stays resident, and
+running the command again just toggles the window (show/hide) via `SIGUSR1`.
+So bind **one global shortcut to the launch command** — the first press starts
+it, every press after that toggles it, exactly like Spotlight.
+
+Recommended shortcut: **Ctrl + Space**.
+
+The command to bind (pick one):
+
+```sh
+# If installed (Flatpak, .deb, or `make install`):
+io.github.emanuele_r.Launcher
+
+# Running from source:
+python3 /home/emanuelerossi/launcher/launcher.py
+```
+
+### COSMIC (Pop!_OS)
+
+Settings → **Keyboard** → **Custom Shortcuts** → **Add shortcut** →
+set the command above, then press **Ctrl + Space** as the key combination.
+
+### GNOME
+
+Settings → **Keyboard** → **View and Customize Shortcuts** → **Custom Shortcuts**
+→ **+**. Name it `Launcher`, set the command above, and assign **Ctrl + Space**.
+
+### KDE Plasma
+
+System Settings → **Shortcuts** → **Custom Shortcuts** → **Edit → New → Global
+Shortcut → Command/URL**. Put the command under the *Action* tab and **Ctrl +
+Space** under the *Trigger* tab.
+
+### Any desktop (fallback)
+
+Bind the shortcut to toggle an already-running instance directly:
+
+```sh
+pkill -USR1 -f launcher.py
+```
+
+> **Note:** GNOME and some IMEs use **Ctrl + Space** to switch input sources.
+> If the shortcut doesn't register, free it in *Keyboard → Input Sources*
+> first, or pick another combo (e.g. **Super + Space**).
 
 ---
 
