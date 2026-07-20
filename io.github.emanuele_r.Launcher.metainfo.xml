@@ -29,9 +29,6 @@
 
   <launchable type="desktop-id">io.github.emanuele_r.Launcher.desktop</launchable>
 
-  <!-- NOTE: update the GitHub user/repo below to the real repository before
-       submitting to Flathub — the images must be reachable at these URLs.
-       The files live in screenshots/ in this repo. -->
   <screenshots>
     <screenshot type="default">
       <caption>AI chat with the conversation-history panel</caption>
@@ -47,7 +44,9 @@
     </screenshot>
   </screenshots>
 
-  <url type="homepage">https://buymeacoffee.com/lehman</url>
+  <url type="homepage">https://github.com/emanuele-r/launcher</url>
+  <url type="bugtracker">https://github.com/emanuele-r/launcher/issues</url>
+  <url type="vcs-browser">https://github.com/emanuele-r/launcher</url>
   <url type="donation">https://buymeacoffee.com/lehman</url>
 
   <update_contact>3ma.reds@gmail.com</update_contact>
