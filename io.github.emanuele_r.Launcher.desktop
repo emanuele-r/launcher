@@ -9,3 +9,4 @@ Terminal=false
 Categories=Utility;GTK;
 Keywords=launcher;search;ai;chat;browser;
 StartupNotify=false
+StartupWMClass=io.github.emanuele_r.Launcher

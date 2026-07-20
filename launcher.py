@@ -135,6 +135,19 @@ visual = screen.get_rgba_visual()
 if visual:
     win.set_visual(visual)
 
+# App icon. Without this the window manager / dock / alt-tab fall back to a
+# generic icon (often a gear), because the app never told them which icon to use.
+GLib.set_prgname(APP_ID)                 # WM_CLASS → matches the .desktop entry
+_icon = data_file(APP_ID + '.svg')       # bundled next to the script in dev
+if _icon.exists():
+    try:
+        Gtk.Window.set_default_icon_from_file(str(_icon))
+        win.set_icon_from_file(str(_icon))
+    except Exception:
+        Gtk.Window.set_default_icon_name(APP_ID)
+else:
+    Gtk.Window.set_default_icon_name(APP_ID)  # installed: resolved via icon theme
+
 box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
 win.add(box)
 
